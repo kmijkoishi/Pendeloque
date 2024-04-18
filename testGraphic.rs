@@ -1,31 +1,18 @@
 fn main()
 {
-    // let mut matrix: [[f32;4]; 4] = [[0.0; 4]; 4];
-    // for i in 0..4
-    // {
-    //     for j in 0..4
-    //     {
-    //         matrix[i][j] = (i+j) as f32;
-    //     }
-    // }
-    // for i in 0..4
-    // {
-    //     for j in 0..4
-    //     {
-    //         print!("{}, ", matrix[i][j]);
-    //     }
-    //     println!();
-    // }
     let vector1: [f32;4] = [1.0, 0.0, 2.0, 0.0];
     let vector2: [f32;4] = [-1.0, 3.0, -2.0, 0.0];
     let vector3: [f32;4] = [-1.0, 3.0, -4.0, 0.0];
     let vertex1: [f32;4] = [5.0, 1.0, 3.0, 1.0];
     let vertex2: [f32;4] = [3.0, -2.0, 4.0, 1.0];
+    let mut point1: [[f32; 4]; 4] = get_identity();
+    point1 = transform_affine(point1, 2.0, 2.0, 2.0);
     println!("Vector 1: {:?}", vector1);
     println!("Vector 2: {:?}", vector2);
     println!("Vector 3: {:?}", vector3);
     println!("Vertex 1: {:?}", vertex1);
     println!("Vertex 2: {:?}", vertex2);
+    for i in &point1 {println!("point 1: {:?}", i);}
     println!("Size of Vector 1: {:?}", f32::sqrt(dot_product(vector1, vector1)));
     println!("Size of Vector 2: {:?}", f32::sqrt(dot_product(vector2, vector2)));
     println!("Size of Vector 3: {:?}", f32::sqrt(dot_product(vector3, vector3)));
@@ -35,6 +22,7 @@ fn main()
     println!("Cross Product of Vector1 and Vector2: {:?}", cross_product(vector1, vector2));
     println!("Volume of Parallelepiped of 3 Vectors: {:?}", f32::abs(dot_product(vector1, cross_product(vector2, vector3))));
     println!("Vector From vertex1 to vertex2: {:?}", get_vector_from_vertex(vertex1, vertex2));
+    println!("Position of point1: {:?}", get_position(point1));
 }
 
 fn addition(src: [f32; 4], dst: [f32; 4]) -> [f32; 4] {
@@ -119,4 +107,27 @@ fn flip(axis: char) -> [[f32; 4]; 4] {
         _=> {},
     }
     return temp;
+}
+
+fn get_position(point: [[f32; 4]; 4]) -> [f32; 4]
+{
+    let mut temp: [f32; 4] = [0.0; 4];
+    for i in 0..4
+    {
+        temp[i] = point[i][3];
+    }
+    return temp;
+}
+
+fn transform_affine(mut src: [[f32; 4]; 4], pos_x: f32, pos_y: f32, pos_z: f32) -> [[f32; 4]; 4]
+{
+    src[0][3] = pos_x;
+    src[1][3] = pos_y;
+    src[2][3] = pos_z;
+    return src;
+}
+
+fn rotate_affine(mut src: [[f32; 4]; 4], axis: char, radian: f32) -> [[f32; 4]; 4]
+{
+    
 }
