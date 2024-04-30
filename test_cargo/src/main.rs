@@ -31,6 +31,15 @@ fn main() {
         .create_gl_window(win_args)
         .expect("couldn't");
 
+    'main_loop: loop {
+        while let Some(event) = sdl.poll_events() {
+            match event {
+                (events::Event::Quit, _) => break 'main_loop,
+                _ => (),
+            }
+        }
+    }
+
     // window.init_gl();
 
     // while !window.should_close() {
