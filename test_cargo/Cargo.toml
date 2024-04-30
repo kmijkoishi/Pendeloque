@@ -6,5 +6,13 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-gl = "0.14.0"
-glfw = "0.55.0"
+# gl = "0.14.0"
+# glfw = "0.55.0"
+bytemuck = "1"
+ogl33 = { version = "0.2.0", features = ["debug_error_checks"]}
+beryllium = "0.13.3"
+imagine = "0.0.5"
+
+# [dev-dependencies]
+# beryllium = "0.2.0-alpha.4"
+# imagine = "0.0.5"
