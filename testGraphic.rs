@@ -10,54 +10,77 @@ fn main()
     let mut point2: Vec<Vec<f32>> = get_identity(4);
     point2 = multiply_matrix(&homogeneous_get_translation(1.0, 1.0, 1.0), &point2);
 
-
-    let modelPoint1: Vec<Vec<f32>> = vec![
-    vec![1.0, 0.0, 0.0, 0.0],
-    vec![0.0, 1.0, 0.0, 0.0],
-    vec![0.0, 0.0, 1.0, 0.0],
-    vec![0.0, 0.0, 0.0, 1.0]];
-    let modelPoint2: Vec<Vec<f32>> = vec![
-    vec![1.0, 0.0, 0.0, 1.0],
-    vec![0.0, 1.0, 0.0, 0.0],
-    vec![0.0, 0.0, 1.0, 0.0],
-    vec![0.0, 0.0, 0.0, 1.0]];
-    let modelPoint3: Vec<Vec<f32>> = vec![
-    vec![1.0, 0.0, 0.0, 0.0],
-    vec![0.0, 1.0, 0.0, 1.0],
-    vec![0.0, 0.0, 1.0, 0.0],
-    vec![0.0, 0.0, 0.0, 1.0]];
-    let modelPoint4: Vec<Vec<f32>> = vec![
-    vec![1.0, 0.0, 0.0, 0.0],
-    vec![0.0, 1.0, 0.0, 0.0],
-    vec![0.0, 0.0, 1.0, 1.0],
-    vec![0.0, 0.0, 0.0, 1.0]];
-    let modelPoint5: Vec<Vec<f32>> = vec![
-    vec![1.0, 0.0, 0.0, 1.0],
-    vec![0.0, 1.0, 0.0, 1.0],
-    vec![0.0, 0.0, 1.0, 0.0],
-    vec![0.0, 0.0, 0.0, 1.0]];
-    let modelPoint6: Vec<Vec<f32>> = vec![
-    vec![1.0, 0.0, 0.0, 1.0],
-    vec![0.0, 1.0, 0.0, 0.0],
-    vec![0.0, 0.0, 1.0, 1.0],
-    vec![0.0, 0.0, 0.0, 1.0]];
-    let modelPoint7: Vec<Vec<f32>> = vec![
-    vec![1.0, 0.0, 0.0, 0.0],
-    vec![0.0, 1.0, 0.0, 1.0],
-    vec![0.0, 0.0, 1.0, 1.0],
-    vec![0.0, 0.0, 0.0, 1.0]];
-    let modelPoint8: Vec<Vec<f32>> = vec![
-    vec![1.0, 0.0, 0.0, 1.0],
-    vec![0.0, 1.0, 0.0, 1.0],
-    vec![0.0, 0.0, 1.0, 1.0],
-    vec![0.0, 0.0, 0.0, 1.0]];
+    let _cubeVertex1 = Vertex {
+        coordinate: vec![
+            vec![0.0],
+            vec![0.0],
+            vec![0.0],
+            vec![1.0],
+        ],
+    };
+    let cubeVertex2 = Vertex {
+        coordinate: vec![
+            vec![1.0],
+            vec![0.0],
+            vec![0.0],
+            vec![1.0],
+        ],
+    };
+    let cubeVertex3 = Vertex {
+        coordinate: vec![
+            vec![0.0],
+            vec![1.0],
+            vec![0.0],
+            vec![1.0],
+        ],
+    };
+    let cubeVertex4 = Vertex {
+        coordinate: vec![
+            vec![1.0],
+            vec![1.0],
+            vec![0.0],
+            vec![1.0],
+        ],
+    };
+    let cubeVertex5 = Vertex {
+        coordinate: vec![
+            vec![0.0],
+            vec![0.0],
+            vec![1.0],
+            vec![1.0],
+        ],
+    };
+    let cubeVertex6 = Vertex {
+        coordinate: vec![
+            vec![1.0],
+            vec![0.0],
+            vec![1.0],
+            vec![1.0],
+        ],
+    };
+    let cubeVertex7 = Vertex {
+        coordinate: vec![
+            vec![0.0],
+            vec![1.0],
+            vec![1.0],
+            vec![1.0],
+        ],
+    };
+    let cubeVertex8 = Vertex {
+        coordinate: vec![
+            vec![1.0],
+            vec![1.0],
+            vec![1.0],
+            vec![1.0],
+        ],
+    };
     let modelTranslation1: Vec<Vec<f32>> = homogeneous_get_translation(1.0, 3.0, 2.0);
     let modelRotation1: Vec<Vec<f32>> = homogeneous_get_rotation('X', 45.0f32.to_radians());
-    let mut model = Model {
-        group: vec![modelPoint1, modelPoint2, modelPoint3, modelPoint4, modelPoint5, modelPoint6, modelPoint7, modelPoint8],
-        stack: vec![modelRotation1, modelTranslation1],
+    let mut cubeObject = Object {
+        vertex_group: vec![_cubeVertex1, cubeVertex2, cubeVertex3, cubeVertex4, cubeVertex5, cubeVertex6, cubeVertex7, cubeVertex8],
+        transformation: Matrix {matrix: modelTranslation1 }
     };
-    calculate_final_transform(&mut model);
+    calculate_global_object_transform(&mut cubeObject);
 
     println!("Vector 1: {:?}", vector1);
     println!("Vector 2: {:?}", vector2);
@@ -335,26 +358,46 @@ fn multiply_matrix(vec1: &Vec<Vec<f32>>, vec2: &Vec<Vec<f32>>) -> Vec<Vec<f32>> 
     }
     return result;
 }
-
-fn calculate_final_transform(model: &mut Model)
+fn calculate_global_object_transform(object: &mut Object)
 {
-    println!("Start Calculation.");
-    let v_count = model.group.len();
-    let s_count = model.stack.len();
-    for mat in model.stack.iter_mut()
+    println!("Start calculate global transformation.");
+    for point in object.vertex_group.iter_mut() 
     {
-        for point in model.group.iter_mut()
-        {
-            *point = multiply_matrix(&mat, &point);
-            print_matrix(&point);
-            println!();
-        }
-        println!("Calculate finished.");
+        point.coordinate = multiply_matrix(&object.transformation.matrix, &point.coordinate);
     }
+    for point in object.vertex_group.iter_mut()
+    {
+        //println!("{}", point);
+    }
+    println!("End calculate global transformation.");
 }
+// fn calculate_final_transform(model: &mut Model)
+// {
+//     println!("Start Calculation.");
+//     let v_count = model.group.len();
+//     let s_count = model.stack.len();
+//     for mat in model.stack.iter_mut()
+//     {
+//         for point in model.group.iter_mut()
+//         {
+//             *point = multiply_matrix(&mat, &point);
+//             print_matrix(&point);
+//             println!();
+//         }
+//         println!("Calculate finished.");
+//     }
+// }
 
-struct Model
+struct Vertex
 {
-    group: Vec<Vec<Vec<f32>>>,
-    stack: Vec<Vec<Vec<f32>>>,
+    coordinate: Vec<Vec<f32>>,
+}
+struct Matrix
+{
+    matrix: Vec<Vec<f32>>,
+}
+struct Object
+{
+    vertex_group: Vec<Vertex>,
+    transformation: Matrix,
 }
