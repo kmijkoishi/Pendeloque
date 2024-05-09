@@ -1,8 +1,32 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![allow(clippy::single_match)]
+#![allow(unused_imports)]
+#![allow(clippy::zero_ptr)]
+
 use beryllium::*;
+use test_cargo::learn_lib::*;
+use gl33::*;
 
 type Vertex = [f32; 3];
 const VERTICES: [Vertex; 3] =
     [[-0.5, -0.5, 0.0], [0.5, -0.5, 0.0], [0.0, 0.5, 0.0]];
+
+const VERT_SHADER: &str = r#"#version 330 core
+    layout (location = 0) in vec3 pos;
+    void main()
+    {
+        gl_Position = vec4(pos.x, pos.y, pos.z, 1.0);
+    }
+    "#;
+
+const FRAG_SHADER: &str = r#"#version 330 core
+    out vec4 final_color;
+    
+    void main()
+    {
+        final_color = vec4(1.0, 0.5, 0.2, 1.0);
+    }
+    "#;
 
 fn main() {
     //let mut window = Window::new(1080, 720, "hello world");
@@ -31,24 +55,25 @@ fn main() {
         .create_gl_window(win_args)
         .expect("couldn't");
 
-    _win.set_swap_interval(video::GlSwapInterval::Vsync);
+    _win.set_swap_interval(video::GlSwapInterval::Vsync).unwrap();
 
     unsafe {
         ogl33::load_gl_with(|f_name| _win.get_proc_address(f_name.cast()));
-        ogl33::glClearColor(0.2, 0.3, 0.3, 1.0);
+        
+        learn_lib::clear_color(0.2, 0.3, 0.3, 1.0);
 
         let mut vao = 0;
         ogl33::glGenVertexArrays(1, &mut vao);
         assert_ne!(vao, 0);
+        ogl33::glBindVertexArray(vao);
 
         let mut vbo = 0;
         ogl33::glGenBuffers(1, &mut vbo);
         assert_ne!(vbo, 0);
-
         ogl33::glBindBuffer(ogl33::GL_ARRAY_BUFFER, vbo);
         ogl33::glBufferData(
             ogl33::GL_ARRAY_BUFFER,
-            std::mem::size_of_val(&VERTICES) as isize,
+            core::mem::size_of_val(&VERTICES) as isize,
             VERTICES.as_ptr().cast(),
             ogl33::GL_STATIC_DRAW,
         );
@@ -58,19 +83,14 @@ fn main() {
             3,
             ogl33::GL_FLOAT,
             ogl33::GL_FALSE,
-            std::mem::size_of::<Vertex>().try_into().unwrap(),
+            core::mem::size_of::<Vertex>().try_into().unwrap(),
             0 as *const _,
         );
         ogl33::glEnableVertexAttribArray(0);
 
         let vertex_shader = ogl33::glCreateShader(ogl33::GL_VERTEX_SHADER);
         assert_ne!(vertex_shader, 0);
-        const VERT_SHADER: &str = r#"#version 330 core
-            layout (location = 0) in vec3 pos;
-            void main()
-            {
-                gl_Position = vec4(pos.x, pos.y, pos.z, 1.0);
-            }"#;
+        
         ogl33::glShaderSource(
             vertex_shader,
             1,
@@ -98,13 +118,7 @@ fn main() {
         let fragment_shader = ogl33::glCreateShader(ogl33::GL_FRAGMENT_SHADER);
         assert_ne!(fragment_shader, 0);
 
-        const FRAG_SHADER: &str = r#"#version 330 core
-            out vec4 final_color;
-            
-            void main()
-            {
-                final_color = vec4(1.0, 0.5, 0.2, 1.0);
-            }"#;
+        
         
         ogl33::glShaderSource(
             fragment_shader,
@@ -167,14 +181,4 @@ fn main() {
         }
         _win.swap_window();
     }
-
-    // window.init_gl();
-
-    // while !window.should_close() {
-    //     unsafe {
-    //         gl::ClearColor(0.3, 0.5, 0.3, 1.0);
-    //         gl::Clear(gl::COLOR_BUFFER_BIT);
-    //     }
-    //     window.update();
-    // }
 }

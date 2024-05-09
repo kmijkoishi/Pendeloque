@@ -12,6 +12,7 @@ bytemuck = "1"
 ogl33 = { version = "0.2.0", features = ["debug_error_checks"]}
 beryllium = "0.13.3"
 imagine = "0.0.5"
+gl33 = "0.2.1"
 
 # [dev-dependencies]
 # beryllium = "0.2.0-alpha.4"
