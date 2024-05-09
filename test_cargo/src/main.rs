@@ -60,7 +60,7 @@ fn main() {
     unsafe {
         ogl33::load_gl_with(|f_name| _win.get_proc_address(f_name.cast()));
         
-        learn_lib::clear_color(0.2, 0.3, 0.3, 1.0);
+        LearnLib::clear_color(0.2, 0.3, 0.3, 1.0);
 
         let mut vao = 0;
         ogl33::glGenVertexArrays(1, &mut vao);
