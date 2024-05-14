@@ -53,12 +53,12 @@ fn main() {
 
     let _win = sdl
         .create_gl_window(win_args)
-        .expect("couldn't");
+        .expect("Couldn't make a window and context");
 
     _win.set_swap_interval(video::GlSwapInterval::Vsync).unwrap();
 
     unsafe {
-        ogl33::load_gl_with(|f_name| _win.get_proc_address(f_name.cast()));
+        load_gl_with(|f_name| _win.get_proc_address(f_name.cast()));
         
         LearnLib::clear_color(0.2, 0.3, 0.3, 1.0);
 
@@ -118,8 +118,6 @@ fn main() {
         let fragment_shader = ogl33::glCreateShader(ogl33::GL_FRAGMENT_SHADER);
         assert_ne!(fragment_shader, 0);
 
-        
-        
         ogl33::glShaderSource(
             fragment_shader,
             1,
@@ -145,6 +143,7 @@ fn main() {
         }
 
         let shader_program = ogl33::glCreateProgram();
+        assert_ne!(shader_program, 0);
         ogl33::glAttachShader(shader_program, vertex_shader);
         ogl33::glAttachShader(shader_program, fragment_shader);
         ogl33::glLinkProgram(shader_program);
@@ -166,6 +165,7 @@ fn main() {
         }
         ogl33::glDeleteShader(vertex_shader);
         ogl33::glDeleteShader(fragment_shader);
+        ogl33::glUseProgram(shader_program);
     }
 
     'main_loop: loop {
