@@ -29,7 +29,6 @@ const FRAG_SHADER: &str = r#"#version 330 core
     "#;
 
 fn main() {
-    //let mut window = Window::new(1080, 720, "hello world");
     let sdl = Sdl::init(init::InitFlags::EVERYTHING);
     sdl.set_gl_context_major_version(3).unwrap();
     sdl.set_gl_context_minor_version(3).unwrap();
@@ -62,21 +61,28 @@ fn main() {
         
         LearnLib::clear_color(0.2, 0.3, 0.3, 1.0);
 
-        let mut vao = 0;
-        ogl33::glGenVertexArrays(1, &mut vao);
-        assert_ne!(vao, 0);
-        ogl33::glBindVertexArray(vao);
+        let mut vao = VertexArray::new().expect("Couldn't make VAO");
+        vao.bind();
 
-        let mut vbo = 0;
-        ogl33::glGenBuffers(1, &mut vbo);
-        assert_ne!(vbo, 0);
-        ogl33::glBindBuffer(ogl33::GL_ARRAY_BUFFER, vbo);
-        ogl33::glBufferData(
-            ogl33::GL_ARRAY_BUFFER,
-            core::mem::size_of_val(&VERTICES) as isize,
-            VERTICES.as_ptr().cast(),
-            ogl33::GL_STATIC_DRAW,
+        let mut vbo = Buffer::new().expect("Couldn't make VBO");
+        // let mut vbo = 0;
+        // ogl33::glGenBuffers(1, &mut vbo);
+        // assert_ne!(vbo, 0);
+
+        vbo.bind(BufferType::Array);
+        // ogl33::glBindBuffer(ogl33::GL_ARRAY_BUFFER, vbo);
+
+        LearnLib::buffer_data(
+            BufferType::Array,
+            bytemuck::cast_slice(&VERTICES),
+            GL_STATIC_DRAW,
         );
+        // ogl33::glBufferData(
+        //     ogl33::GL_ARRAY_BUFFER,
+        //     core::mem::size_of_val(&VERTICES) as isize,
+        //     VERTICES.as_ptr().cast(),
+        //     ogl33::GL_STATIC_DRAW,
+        // );
 
         ogl33::glVertexAttribPointer(
             0,
@@ -165,6 +171,10 @@ fn main() {
         }
         ogl33::glDeleteShader(vertex_shader);
         ogl33::glDeleteShader(fragment_shader);
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
         ogl33::glUseProgram(shader_program);
     }
 
