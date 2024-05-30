@@ -6,16 +6,24 @@
 use beryllium::*;
 use test_cargo::learn_lib::*;
 use gl33::*;
+use ultraviolet::*;
 
 type Vertex = [f32; 3];
-const VERTICES: [Vertex; 3] =
-    [[-0.5, -0.5, 0.0], [0.5, -0.5, 0.0], [0.0, 0.5, 0.0]];
+type TriIndexes = [u32; 3];
+
+const VERTICES: [Vertex; 4] =
+    [[0.5, 0.5, 0.0], [0.5, -0.5, 0.0], [-0.5, -0.5, 0.0], [-0.5, 0.5, 0.0]];
+const INDICES: [TriIndexes; 2] = [[0, 1, 2], [0, 2, 3]];
 
 const VERT_SHADER: &str = r#"#version 330 core
+    uniform mat4 transform;
+
     layout (location = 0) in vec3 pos;
+
     void main()
     {
-        gl_Position = vec4(pos.x, pos.y, pos.z, 1.0);
+        //gl_Position = vec4(pos.x, pos.y, pos.z, 1.0);
+        gl_Position = transform * vec4(pos, 1.0);
     }
     "#;
 
@@ -57,33 +65,42 @@ fn main() {
     _win.set_swap_interval(video::GlSwapInterval::Vsync).unwrap();
 
     unsafe {
-        load_gl_with(|f_name| _win.get_proc_address(f_name.cast()));
-        
-        LearnLib::clear_color(0.2, 0.3, 0.3, 1.0);
+        ogl33::load_gl_with(|f_name| _win.get_proc_address(f_name.cast()));
+    }
+    LearnLib::clear_color(0.2, 0.3, 0.3, 1.0);
+    
 
-        let mut vao = VertexArray::new().expect("Couldn't make VAO");
-        vao.bind();
+    let vao = VertexArray::new().expect("Couldn't make VAO");
+    vao.bind();
 
-        let mut vbo = Buffer::new().expect("Couldn't make VBO");
-        // let mut vbo = 0;
-        // ogl33::glGenBuffers(1, &mut vbo);
-        // assert_ne!(vbo, 0);
+    let vbo = test_cargo::learn_lib::Buffer::new().expect("Couldn't make VBO");
+    // let mut vbo = 0;
+    // ogl33::glGenBuffers(1, &mut vbo);
+    // assert_ne!(vbo, 0);
 
-        vbo.bind(BufferType::Array);
-        // ogl33::glBindBuffer(ogl33::GL_ARRAY_BUFFER, vbo);
+    vbo.bind(BufferType::Array);
+    // ogl33::glBindBuffer(ogl33::GL_ARRAY_BUFFER, vbo);
 
-        LearnLib::buffer_data(
-            BufferType::Array,
-            bytemuck::cast_slice(&VERTICES),
-            GL_STATIC_DRAW,
-        );
-        // ogl33::glBufferData(
-        //     ogl33::GL_ARRAY_BUFFER,
-        //     core::mem::size_of_val(&VERTICES) as isize,
-        //     VERTICES.as_ptr().cast(),
-        //     ogl33::GL_STATIC_DRAW,
-        // );
+    let ebo = test_cargo::learn_lib::Buffer::new().expect("Couldn't make the element buffer.");
+    ebo.bind(BufferType::ElementArray);
+    buffer_data(
+        BufferType::ElementArray,
+        bytemuck::cast_slice(&INDICES),
+        ogl33::GL_STATIC_DRAW,
+    );
 
+    buffer_data(
+        BufferType::Array,
+        bytemuck::cast_slice(&VERTICES),
+        ogl33::GL_STATIC_DRAW,
+    );
+    // ogl33::glBufferData(
+    //     ogl33::GL_ARRAY_BUFFER,
+    //     core::mem::size_of_val(&VERTICES) as isize,
+    //     VERTICES.as_ptr().cast(),
+    //     ogl33::GL_STATIC_DRAW,
+    // );
+    unsafe {
         ogl33::glVertexAttribPointer(
             0,
             3,
@@ -93,91 +110,14 @@ fn main() {
             0 as *const _,
         );
         ogl33::glEnableVertexAttribArray(0);
-
-        let vertex_shader = ogl33::glCreateShader(ogl33::GL_VERTEX_SHADER);
-        assert_ne!(vertex_shader, 0);
-        
-        ogl33::glShaderSource(
-            vertex_shader,
-            1,
-            &(VERT_SHADER.as_bytes().as_ptr().cast()),
-            &(VERT_SHADER.len().try_into().unwrap()),
-        );
-        ogl33::glCompileShader(vertex_shader);
-        let mut success = 0;
-        ogl33::glGetShaderiv(vertex_shader, ogl33::GL_COMPILE_STATUS, &mut success);
-
-        if success == 0
-        {
-            let mut v: Vec<u8> = Vec::with_capacity(1024);
-            let mut log_len = 0_i32;
-            ogl33::glGetShaderInfoLog(
-                vertex_shader,
-                1024,
-                &mut log_len,
-                v.as_mut_ptr().cast(),
-            );
-            v.set_len(log_len.try_into().unwrap());
-            panic!("Vertex compile Error: {}", String::from_utf8_lossy(&v));
-        }
-
-        let fragment_shader = ogl33::glCreateShader(ogl33::GL_FRAGMENT_SHADER);
-        assert_ne!(fragment_shader, 0);
-
-        ogl33::glShaderSource(
-            fragment_shader,
-            1,
-            &(FRAG_SHADER.as_bytes().as_ptr().cast()),
-            &(FRAG_SHADER.len().try_into().unwrap()),
-        );
-        ogl33::glCompileShader(fragment_shader);
-        
-        let mut success = 0;
-        ogl33::glGetShaderiv(fragment_shader, ogl33::GL_COMPILE_STATUS, &mut success);
-        if success == 0
-        {
-            let mut v:  Vec<u8> = Vec::with_capacity(1024);
-            let mut log_len = 0_i32;
-            ogl33::glGetShaderInfoLog(
-                fragment_shader,
-                1024,
-                &mut log_len,
-                v.as_mut_ptr().cast(),
-            );
-            v.set_len(log_len.try_into().unwrap());
-            panic!("Fragment Compile Error: {}", String::from_utf8_lossy(&v));
-        }
-
-        let shader_program = ogl33::glCreateProgram();
-        assert_ne!(shader_program, 0);
-        ogl33::glAttachShader(shader_program, vertex_shader);
-        ogl33::glAttachShader(shader_program, fragment_shader);
-        ogl33::glLinkProgram(shader_program);
-
-        let mut success = 0;
-        ogl33::glGetProgramiv(shader_program, ogl33::GL_LINK_STATUS, &mut success);
-        if success == 0
-        {
-            let mut v: Vec<u8> = Vec::with_capacity(1024);
-            let mut log_len = 0_i32;
-            ogl33::glGetProgramInfoLog(
-                shader_program,
-                1024,
-                &mut log_len,
-                v.as_mut_ptr().cast(),
-            );
-            v.set_len(log_len.try_into().unwrap());
-            panic!("Program Link Error: {}", String::from_utf8_lossy(&v));
-        }
-        ogl33::glDeleteShader(vertex_shader);
-        ogl33::glDeleteShader(fragment_shader);
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
-        ogl33::glUseProgram(shader_program);
     }
 
+    let shader_program = 
+        ShaderProgram::from_vert_frag(VERT_SHADER, FRAG_SHADER).unwrap();
+    shader_program.use_program();
+
+
+    polygon_mode(test_cargo::learn_lib::PolygonMode::Line);
     'main_loop: loop {
         while let Some(event) = sdl.poll_events() {
             match event {
@@ -185,9 +125,17 @@ fn main() {
                 _ => (),
             }
         }
+
+        let time = sdl.get_ticks() as f32 / 1000.0_f32;
+        let transform = Mat4::from_rotation_z(time);
+
         unsafe {
             ogl33::glClear(ogl33::GL_COLOR_BUFFER_BIT);
-            ogl33::glDrawArrays(ogl33::GL_TRIANGLES, 0, 3);
+            let transform_name = test_cargo::null_str!("transform").as_ptr().cast();
+            let transform_loc = 
+                ogl33::glGetUniformLocation(shader_program.0, transform_name);
+            ogl33::glUniformMatrix4fv(transform_loc, 1, ogl33::GL_FALSE, transform.as_ptr());
+            ogl33::glDrawElements(ogl33::GL_TRIANGLES, 6, ogl33::GL_UNSIGNED_INT, 0 as *const _);
         }
         _win.swap_window();
     }
